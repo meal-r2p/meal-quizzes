@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEAL Тренажер — Рівні результатів</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1a3a6b;
+    --pink: #E12269;
+    --bg: #f7f8fc;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --gray-light: #e8eaf0;
+    --success: #059669;
+    --success-bg: #d1fae5;
+    --error: #dc2626;
+    --error-bg: #fee2e2;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(26,58,107,0.10);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: #1a1a2e;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: var(--navy);
+    color: white;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-logo { font-size: 12px; font-weight: 700; letter-spacing: .06em; opacity: .85; }
+  .header-title { font-size: 15px; font-weight: 600; }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .progress-bar { height: 4px; background: var(--gray-light); border-radius: 2px; margin-bottom: 1.5rem; }
+  .progress-fill { height: 100%; border-radius: 2px; background: var(--navy); transition: width .4s; }
+
+  .scenario-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+  }
+  .scenario-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-bottom: .75rem;
+    background: #EEF2FF;
+    color: var(--navy);
+  }
+  .scenario-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1a1a2e;
+    margin-bottom: .4rem;
+  }
+  .scenario-question {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray);
+    margin-top: .75rem;
+  }
+
+  .opts-grid { display: grid; gap: 8px; margin-bottom: 1rem; }
+  .opt-btn {
+    background: var(--white);
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a2e;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background .15s, border-color .15s;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .opt-btn:hover:not(:disabled) { background: #f0f4ff; border-color: var(--navy); }
+  .opt-letter { font-weight: 700; color: var(--gray); min-width: 18px; flex-shrink: 0; }
+  .opt-btn.correct { background: var(--success-bg); border-color: #34d399; color: #065f46; }
+  .opt-btn.correct .opt-letter { color: #065f46; }
+  .opt-btn.wrong { background: var(--error-bg); border-color: #f87171; color: #991b1b; }
+  .opt-btn.wrong .opt-letter { color: #991b1b; }
+  .opt-btn:disabled { cursor: default; }
+
+  .feedback-box {
+    border-radius: 8px;
+    padding: .85rem 1rem;
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .feedback-box.correct { background: var(--success-bg); color: #065f46; border: 1px solid #6ee7b7; }
+  .feedback-box.wrong   { background: var(--error-bg); color: #991b1b; border: 1px solid #fca5a5; }
+
+  .next-btn-wrap { text-align: right; }
+
+  .btn {
+    padding: .65rem 1.4rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity .15s;
+  }
+  .btn:hover { opacity: .88; }
+  .btn-primary { background: var(--navy); color: white; }
+
+  .result-screen { text-align: center; padding: 3rem 1rem; }
+  .result-score { font-size: 56px; font-weight: 700; color: var(--navy); margin-bottom: .4rem; }
+  .result-msg { font-size: 16px; color: var(--gray); margin-bottom: 2rem; line-height: 1.6; }
+  .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 2rem; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto; }
+  .score-item { background: var(--white); border-radius: 8px; padding: .7rem 1rem; display: flex; justify-content: space-between; font-size: 13px; box-shadow: var(--shadow); }
+  .score-item-label { color: var(--gray); }
+  .score-item-val { font-weight: 700; color: var(--navy); }
+
+  @media (max-width: 600px) {
+    .header { flex-direction: column; gap: .4rem; text-align: center; }
+    .score-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">ПРАВО НА ЗАХИСТ · MEAL</div>
+  <div class="header-title">Тренажер: Рівні результатів</div>
+</div>
+
+<div class="container">
+
+  <div id="quiz-area">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <div style="font-size:12px; color:var(--gray); font-weight:600;" id="q-counter">Питання 1 з 6</div>
+      <div style="font-size:12px; color:var(--gray);" id="q-score-live">✓ 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+    <div class="scenario-card">
+      <div class="scenario-tag" id="s-tag"></div>
+      <div class="scenario-text" id="s-text"></div>
+      <div class="scenario-question" id="s-question"></div>
+    </div>
+
+    <div class="opts-grid" id="opts"></div>
+    <div class="feedback-box" id="s-feedback"></div>
+    <div class="next-btn-wrap">
+      <button class="btn btn-primary" id="s-next" style="display:none;" onclick="nextQ()">Наступне →</button>
+    </div>
+  </div>
+
+  <div id="result-area" style="display:none;">
+    <div class="result-screen">
+      <div class="result-score" id="r-score"></div>
+      <div class="result-msg" id="r-msg"></div>
+      <div class="score-grid" id="r-grid"></div>
+      <button class="btn btn-primary" onclick="restartScenario()">Пройти ще раз</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SCENARIOS = [
+  {
+    tag: 'Рівень результату',
+    text: 'Організація провела 12 тренінгів з правової грамотності для ВПО у Краматорській громаді. Загалом участь взяли 340 осіб.',
+    question: 'Що описує ця фраза — "340 осіб пройшли тренінг"?',
+    opts: ['Inputs — ресурси програми', 'Activities — що команда робила', 'Outputs — прямий результат діяльності', 'Outcomes — зміни для бенефіціарів'],
+    answer: 2,
+    exp: '<strong>Outputs</strong> — це прямий, вимірюваний результат активності. "340 осіб пройшли тренінг" — це те, що команда безпосередньо надала або досягла. Зміни у знаннях чи поведінці учасників — це вже Outcomes, які вимірюються пізніше.'
+  },
+  {
+    tag: 'Рівень результату',
+    text: 'Після серії тренінгів 73% учасників змогли правильно назвати три ключові права ВПО та пояснити куди звертатись у разі їх порушення.',
+    question: 'Який рівень результату описано?',
+    opts: ['Outputs — кількість навчених', 'Outcomes — зміни у знаннях та поведінці', 'Impact — довгостроковий вплив на громаду', 'Activities — що команда робила'],
+    answer: 1,
+    exp: '<strong>Outcomes</strong> — це зміни у знаннях, поведінці або доступі цільової групи, що відбулися внаслідок програми. 73% учасників, які тепер знають свої права — це саме Outcome, а не Output (Output — це "340 пройшли тренінг").'
+  },
+  {
+    tag: 'Рівень результату',
+    text: 'Через рік після завершення програми психосоціальної підтримки та навчання громадських лідерів у прифронтовій громаді зафіксовано: місцеві волонтери самостійно організовують групи взаємодопомоги, рівень психологічної стійкості населення зріс, а громада виробила власні механізми реагування на стресові події без залучення зовнішніх організацій.',
+    question: 'Який рівень результату описує ця ситуація?',
+    opts: ['Outputs — кількість проведених тренінгів та консультацій', 'Outcomes — зміни у стані учасників програми', 'Impact — посилення стійкості громади як довгостроковий системний результат', 'Activities — що робила команда під час проєкту'],
+    answer: 2,
+    exp: '<strong>Impact</strong> — це довгостроковий трансформаційний вплив на рівні громади або системи, який зберігається після закриття програми. Ключові ознаки: минув тривалий час, зміни вийшли за межі окремих бенефіціарів, громада функціонує самостійно. Посилення resilience (стійкості) — один із найпоширеніших Impact-індикаторів у гуманітарних програмах.'
+  },
+  {
+    tag: 'Рівень результату',
+    text: 'Юрист, бюджет 50 000 грн на 3 місяці, ноутбук, офісне приміщення та волонтер-координатор.',
+    question: 'Який рівень логічного ланцюга описано?',
+    opts: ['Activities — дії команди', 'Outputs — що надано бенефіціарам', 'Inputs — ресурси для реалізації програми', 'Outcomes — зміни для цільової групи'],
+    answer: 2,
+    exp: '<strong>Inputs</strong> — це все що організація вкладає в програму: люди, гроші, обладнання, приміщення, час. Без Inputs неможливо реалізувати жодну активність.'
+  },
+  {
+    tag: 'Рівень результату',
+    text: 'Координатор захисту провів 8 виїздів до громад Херсонської області, під час яких надав 120 консультацій з питань документів та соціальних виплат.',
+    question: '"8 виїздів" та "120 консультацій" — це який рівень результату?',
+    opts: ['Inputs — ресурси витрачені на виїзди', 'Outcomes — зміни для отримувачів консультацій', 'Outputs — прямі результати діяльності команди', 'Impact — довгостроковий вплив на громаду'],
+    answer: 2,
+    exp: '<strong>Outputs</strong> — це те, що команда безпосередньо зробила і що можна порахувати одразу після активності: 8 виїздів, 120 консультацій. Outputs не описують що змінилось у людей — лише що було надано. Зміни у знаннях або можливостях бенефіціарів — це вже Outcomes, які вимірюються пізніше.'
+  },
+  {
+    tag: 'Вертикальна логіка',
+    text: 'Команда провела аналіз і виявила: тренінги проведено (✓), 400 осіб охоплено (✓), але рівень знань учасників після тренінгів залишився таким самим як до початку програми.',
+    question: 'Де порвався ланцюг результатів?',
+    opts: ['Між Inputs і Activities — недостатньо ресурсів', 'Між Activities і Outputs — активності не охопили цільову групу', 'Між Outputs і Outcomes — Output досягнуто, але Outcome не відбувся', 'Між Outcomes і Impact — зміни не вплинули на громаду'],
+    answer: 2,
+    exp: '<strong>Розрив між Outputs і Outcomes.</strong> Команда провела активності (Activities ✓) і охопила людей (Outputs ✓), але очікувана зміна у знаннях (Outcome) не відбулась. Це сигнал переглянути припущення (assumptions): можливо, формат не підходив, мова була незрозумілою або тривалість тренінгу — недостатньою.'
+  }
+];
+
+const letters = ['А','Б','В','Г'];
+let qIdx = 0, score = 0, answered = false;
+let topicScores = {};
+
+function renderQ() {
+  const q = SCENARIOS[qIdx];
+  document.getElementById('q-counter').textContent = `Питання ${qIdx+1} з ${SCENARIOS.length}`;
+  document.getElementById('q-score-live').textContent = `✓ ${score}`;
+  document.getElementById('progress').style.width = `${(qIdx/SCENARIOS.length)*100}%`;
+  document.getElementById('s-tag').textContent = q.tag;
+  document.getElementById('s-text').textContent = q.text;
+  document.getElementById('s-question').textContent = q.question;
+  document.getElementById('s-feedback').style.display = 'none';
+  document.getElementById('s-next').style.display = 'none';
+  answered = false;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((opt,i) => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    b.onclick = () => selectA(i, q);
+    opts.appendChild(b);
+  });
+}
+
+function selectA(idx, q) {
+  if (answered) return;
+  answered = true;
+  if (!topicScores[q.tag]) topicScores[q.tag] = [0,0];
+  topicScores[q.tag][1]++;
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach((b,i) => {
+    b.disabled = true;
+    if (i===q.answer) b.classList.add('correct');
+    else if (i===idx && idx!==q.answer) b.classList.add('wrong');
+  });
+  const ok = idx===q.answer;
+  if (ok) { score++; topicScores[q.tag][0]++; }
+  const fb = document.getElementById('s-feedback');
+  fb.className = 'feedback-box ' + (ok?'correct':'wrong');
+  fb.innerHTML = (ok ? '✓ Правильно! ' : `✗ Правильна відповідь: <strong>${letters[q.answer]}) ${q.opts[q.answer]}</strong>. `) + q.exp;
+  fb.style.display = 'block';
+  document.getElementById('s-next').style.display = 'inline-block';
+  document.getElementById('s-next').textContent = qIdx < SCENARIOS.length-1 ? 'Наступне питання →' : 'Переглянути результат →';
+  document.getElementById('q-score-live').textContent = `✓ ${score}`;
+}
+
+function nextQ() {
+  qIdx++;
+  if (qIdx >= SCENARIOS.length) showResult();
+  else renderQ();
+}
+
+function showResult() {
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('result-area').style.display = 'block';
+  document.getElementById('progress').style.width = '100%';
+  document.getElementById('r-score').textContent = `${score} / ${SCENARIOS.length}`;
+  const msgs = ['Спробуйте ще раз — матеріал варто перечитати','Є прогалини — перегляньте пояснення','Непогано, але є що покращити','Добре! Логіку результатів розумієте','Дуже добре!','Відмінно! Всі рівні результатів засвоєно ✓','Відмінно! Всі рівні результатів засвоєно ✓'];
+  document.getElementById('r-msg').textContent = msgs[score] || msgs[5];
+  const grid = document.getElementById('r-grid');
+  grid.innerHTML = '';
+  Object.entries(topicScores).forEach(([name,[got,total]]) => {
+    const d = document.createElement('div');
+    d.className = 'score-item';
+    d.innerHTML = `<span class="score-item-label">${name}</span><span class="score-item-val">${got}/${total}</span>`;
+    grid.appendChild(d);
+  });
+}
+
+function restartScenario() {
+  qIdx = 0; score = 0; answered = false; topicScores = {};
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('result-area').style.display = 'none';
+  renderQ();
+}
+
+renderQ();
+</script>
+</body>
+</html>
